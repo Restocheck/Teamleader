@@ -9,6 +9,11 @@
 			"name": "Tijs Verkoyen",
 			"email": "php-teamleader@verkoyen.eu",
 			"role": "Developer"
+		},
+		{
+			"name": "Samuel Vandamme",
+			"email": "samuel@sava.be",
+			"role": "Developer"
 		}
 	],
 	"require": {
