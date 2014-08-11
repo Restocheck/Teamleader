@@ -33,6 +33,13 @@ class Teamleader
     const VERSION = '1.0.0';
 
     /**
+     * Pass requests through SSL
+     *
+     * @var string
+     */
+    public $ssl = true;
+
+    /**
      * The apiGroup to use
      *
      * @var string
@@ -185,8 +192,8 @@ class Teamleader
         $options[CURLOPT_PORT] = self::API_PORT;
         $options[CURLOPT_USERAGENT] = $this->getUserAgent();
         $options[CURLOPT_FOLLOWLOCATION] = true;
-        $options[CURLOPT_SSL_VERIFYPEER] = false;
-        $options[CURLOPT_SSL_VERIFYHOST] = false;
+        $options[CURLOPT_SSL_VERIFYPEER] = $this->ssl;
+        $options[CURLOPT_SSL_VERIFYHOST] = $this->ssl;
         $options[CURLOPT_RETURNTRANSFER] = true;
         $options[CURLOPT_TIMEOUT] = (int) $this->getTimeOut();
 
@@ -548,11 +555,11 @@ class Teamleader
 
     /**
      * Get all existing customers
-     * 
+     *
      * @return array
      */
     public function crmGetAllCustomers()
-    {   
+    {
         $customers = array();
 
         $customers['contacts'] = array();
@@ -607,7 +614,7 @@ class Teamleader
 
     /**
      * Search for invoices
-     * 
+     *
      * @param int $dateFrom
      * @param int $dateTo
      * @param Contact|Company|null $contactOrCompany
@@ -655,7 +662,7 @@ class Teamleader
 
     /**
      * Get a specific invoice by id
-     * 
+     *
      * @param int $id
      * @return Invoice
      */
@@ -676,7 +683,7 @@ class Teamleader
 
     /**
      * Get update an invoice
-     * 
+     *
      * @param Invoice $invoice
      * @return bool
      */
@@ -692,7 +699,7 @@ class Teamleader
 
     /**
      * Sets the invoice's payment status to paid
-     * 
+     *
      * @param  Invoice $invoice
      * @return bool
      */
@@ -710,9 +717,9 @@ class Teamleader
 
     /**
      * Download a pdf of the invoice
-     * 
+     *
      * @param Invoice $invoice
-     * @return 
+     * @return
      */
     public function invoicesDownloadInvoicePDF(Invoice $invoice, $headers = false)
     {
@@ -740,7 +747,7 @@ class Teamleader
 
     /**
      * Search for creditnotes
-     * 
+     *
      * @param int $dateFrom
      * @param int $dateTo
      * @param Contact|Company|null $contactOrCompany
@@ -792,7 +799,7 @@ class Teamleader
 
     /**
      * Get a specific creditnote by id
-     * 
+     *
      * @param int $id
      * @return Creditnote
      */
@@ -813,9 +820,9 @@ class Teamleader
 
     /**
      * Download a pdf of the creditnote
-     * 
+     *
      * @param Creditnote $creditnote
-     * @return 
+     * @return
      */
     public function invoicesDownloadCreditnotePDF(Creditnote $creditnote, $headers = false)
     {
