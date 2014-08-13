@@ -59,6 +59,17 @@ class Sale
      */
     private $title;
 
+    private $offerteNr;
+
+    private $contactId;
+
+    private $companyId;
+
+    private $phaseId;
+
+    private $totalPriceExclVat;
+
+    private $customFields;
     /**
      * @param \SumoCoders\Teamleader\Crm\Company $company
      */
@@ -131,6 +142,14 @@ class Sale
         $this->responsibleSysClientId = $responsibleSysClientId;
     }
 
+    public function getResponsibleUserId() {
+        return getResponsibleSysClientId();
+    }
+
+    public function setResponsibleUserId($id) {
+        setResponsibleSysClientId($id);
+    }
+
     /**
      * @return int
      */
@@ -185,6 +204,73 @@ class Sale
     public function getTitle()
     {
         return $this->title;
+    }
+
+    public function getOfferteNr() {
+        return $this->offerteNr;
+    }
+
+    public function setOfferteNr($nr) {
+        $this->offerteNr = $nr;
+    }
+
+    public function getCompanyId() {
+        return $this->companyId;
+    }
+
+    public function setCompanyId($id) {
+        $this->companyId = $id;
+    }
+
+    public function getContactId() {
+        return $this->companyId;
+    }
+
+    public function setContactId($id) {
+        $this->companyId = $id;
+    }
+
+    public function getPhaseId() {
+        return $this->phaseId;
+    }
+
+    public function setPhaseId($id) {
+        $this->phaseId = $id;
+    }
+
+    public function getTotalPriceExclVat() {
+        return $this->totalPriceExclVat;
+    }
+
+    public function setTotalPriceExclVat($price) {
+        $this->totalPriceExclVat = $price;
+    }
+
+    /**
+     * Set a single custom field
+     *
+     * @param string $id
+     * @param mixed  $value
+     */
+    public function setCustomField($id, $value)
+    {
+        $this->customFields[$id] = $value;
+    }
+
+    /**
+     * @param array $customFields
+     */
+    public function setCustomFields($customFields)
+    {
+        $this->customFields = $customFields;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustomFields()
+    {
+        return $this->customFields;
     }
 
     /**
@@ -262,4 +348,61 @@ class Sale
 
         return $return;
     }
+
+
+/**
+     * Initialize a deal with raw data we got from the API
+     *
+     * @param  array   $data
+     * @return deal
+     */
+    public static function initializeWithRawData($data)
+    {
+        $item = new Sale();
+
+        foreach ($data as $key => $value) {
+            switch ($key) {
+                case substr($key, 0, 3) == 'cf_':
+                    $chunks = explode('_', $key);
+                    $id = end($chunks);
+                    $item->setCustomField($id, $value);
+                    break;
+
+                case 'for_id':
+                case 'language_name':
+                    break;
+
+                case 'deleted':
+                    $item->setDeleted(($value == 1));
+                    break;
+
+                case 'for':
+                    if($value === 'company')
+                        $this->setCompanyId();
+                    else
+                        $this->setContactId();
+                    break;
+
+
+
+                default:
+                    // Ignore empty values
+                    if ($value == '') {
+                        continue;
+                    }
+
+                    $methodName = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $key)));
+                    if (!method_exists(__CLASS__, $methodName)) {
+                        if (Teamleader::DEBUG) {
+                            var_dump($key, $value);
+                        }
+                        throw new Exception('Unknown method (' . $methodName . ')');
+                    }
+                    call_user_func(array($item, $methodName), $value);
+            }
+        }
+
+        return $item;
+    }
+
 }
