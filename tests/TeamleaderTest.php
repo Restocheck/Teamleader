@@ -262,7 +262,7 @@ class TeamleaderTest extends \PHPUnit_Framework_TestCase
         $sale = new Sale();
         $sale->setTitle('title_' . $time);
         $sale->setSource('source_' . $time);
-        $sale->setContact($contact);
+        $sale->setContactId($id);
         $sale->setResponsibleSysClientId(3187);
         $sale->setSysDepartmentId(2131);
 
@@ -459,10 +459,10 @@ class TeamleaderTest extends \PHPUnit_Framework_TestCase
         $id = $this->teamleader->invoicesAddInvoice($invoice);
         $invoice->setId($id);
 
-        $creditnote = new Creditnote();
+        $creditnote = new CreditNote();
         $creditnote->setInvoice($invoice);
 
-        $line1 = new CreditnoteLine();
+        $line1 = new CreditNoteLine();
         $line1->setAmount(1);
         $line1->setDescription('Description ' . $time);
         $line1->setPrice(30);
@@ -501,10 +501,10 @@ class TeamleaderTest extends \PHPUnit_Framework_TestCase
         $id = $this->teamleader->invoicesAddInvoice($invoice);
         $invoice->setId($id);
 
-        $creditnote = new Creditnote();
+        $creditnote = new CreditNote();
         $creditnote->setInvoice($invoice);
 
-        $line1 = new CreditnoteLine();
+        $line1 = new CreditNoteLine();
         $line1->setAmount(1);
         $line1->setDescription('Description ' . $time);
         $line1->setPrice(30);

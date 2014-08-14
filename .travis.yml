@@ -1,5 +1,9 @@
 language: php
 php:
-    - 5.5
-    - 5.4
-    - hhvm
+- 5.5
+- 5.4
+- hhvm
+script: phpunit tests/TeamleaderTest.php
+before_install:
+- openssl aes-256-cbc -K $encrypted_18c67734e5af_key -iv $encrypted_18c67734e5af_iv
+  -in tests/config.php.enc -out tests/config.php -d
