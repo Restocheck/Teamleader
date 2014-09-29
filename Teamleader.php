@@ -298,7 +298,7 @@ class Teamleader
         $rawData = $this->doCall('getDepartments.php', $fields);
 
         $departments = array_map(
-            function($department) {
+            function ($department) {
                 return Department::initializeWithRawData($department);
             },
             $rawData
@@ -773,6 +773,21 @@ class Teamleader
         return $id;
     }
 
+    /**
+     * Updates an invoice
+     *
+     * @param  Invoice $invoice
+     * @return int
+     */
+    public function invoicesUpdateInvoice(Invoice $invoice)
+    {
+        $fields = $invoice->toArrayForApi();
+        $fields['invoice_id'] = (int) $invoice->getId();
+
+        $this->doCall('updateInvoice.php', $fields);
+
+        return $invoice->getId();
+    }
     /**
      * Search for invoices
      *

@@ -30,6 +30,11 @@ class Invoice
     private $name;
 
     /**
+     * @var string
+     */
+    private $comments;
+
+    /**
      * @var Contact
      */
     private $contact;
@@ -194,6 +199,21 @@ class Invoice
         $this->name = $name;
     }
 
+    /**
+     * @return string
+     */
+    public function getComments()
+    {
+        return $this->comments;
+    }
+
+    /**
+     * @param string $comments
+     */
+    public function setComments($comments)
+    {
+        $this->comments = $comments;
+    }
     /**
      * @param \SumoCoders\Teamleader\Crm\Company $company
      */
@@ -632,6 +652,10 @@ class Invoice
         }
         if($this->getPaymentTerm()) {
             $return['payment_term'] = $this->getPaymentTerm();
+        }
+
+        if ($this->getComments()) {
+            $return['comments'] = $this->getComments();
         }
 
         $lines = $this->getLines();
