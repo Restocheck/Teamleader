@@ -30,6 +30,11 @@ class Invoice
     private $name;
 
     /**
+     * @var string
+     */
+    private $comments;
+
+    /**
      * @var Contact
      */
     private $contact;
@@ -151,6 +156,21 @@ class Invoice
         $this->name = $name;
     }
 
+    /**
+     * @return string
+     */
+    public function getComments()
+    {
+        return $this->comments;
+    }
+
+    /**
+     * @param string $comments
+     */
+    public function setComments($comments)
+    {
+        $this->comments = $comments;
+    }
     /**
      * @param \SumoCoders\Teamleader\Crm\Company $company
      */
@@ -583,6 +603,10 @@ class Invoice
         $return['contact_or_company'] = $this->isContactOrCompany();
         if ($this->getSysDepartmentId()) {
             $return['sys_department_id'] = $this->getSysDepartmentId();
+        }
+
+        if ($this->getComments()) {
+            $return['comments'] = $this->getComments();
         }
 
         $lines = $this->getLines();
