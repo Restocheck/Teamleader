@@ -269,6 +269,14 @@ class InvoiceLine
                     $invoiceLine->setDescription($value);
                     break;
 
+                case 'vat_rate':
+                    $invoiceLine->setVat($value);
+                    break;
+
+                case 'account':
+                    // Todo
+                    break;
+
                 default:
                     if ($value == '') {
                         continue;
