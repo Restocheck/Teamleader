@@ -857,22 +857,6 @@ class Teamleader
     }
 
     /**
-     * Get update an invoice
-     *
-     * @param Invoice $invoice
-     * @return bool
-     */
-    public function invoicesUpdateInvoice(Invoice $invoice)
-    {
-        $fields = $invoice->toArrayForApi();
-        $fields['invoice_id'] = $invoice->getId();
-
-        $rawData = $this->doCall('updateInvoice.php', $fields);
-
-        return ($rawData == 'OK');
-    }
-
-    /**
      * Sets the invoice's payment status to paid
      *
      * @param  Invoice $invoice
