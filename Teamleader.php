@@ -248,7 +248,7 @@ class Teamleader
         }
 		
 		// in case we received an error 400 Bad Request an exception should be thrown
-        if ($headers['http_code'] == 400) {
+        if ($headers['http_code'] != 200) {
 			// attempt to extract a reason to show in the exception
 			$json = @json_decode($response, true);
             if ($json !== false && isset($json['reason'])) {
