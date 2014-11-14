@@ -135,6 +135,38 @@ class Invoice
     private $paymentTerm;
 
     /**
+     * @var array
+     */
+    private $customFields;
+
+    /**
+     * Set a single custom field
+     *
+     * @param string $id
+     * @param mixed  $value
+     */
+    public function setCustomField($id, $value)
+    {
+        $this->customFields[$id] = $value;
+    }
+
+    /**
+     * @param array $customFields
+     */
+    public function setCustomFields($customFields)
+    {
+        $this->customFields = $customFields;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustomFields()
+    {
+        return $this->customFields;
+    }
+
+    /**
      * @return string
      */
     public function getForAttentionOf()
@@ -656,6 +688,12 @@ class Invoice
 
         if ($this->getComments()) {
             $return['comments'] = $this->getComments();
+        }
+
+        if ($this->getCustomFields()) {
+            foreach ($this->getCustomFields() as $fieldID => $fieldValue) {
+                $return['custom_field_' . $fieldID] = $fieldValue;
+            }
         }
 
         $lines = $this->getLines();
