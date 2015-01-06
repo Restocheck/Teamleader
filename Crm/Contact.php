@@ -81,6 +81,11 @@ class Contact
     private $country;
 
     /**
+     * @var array
+     */
+    private $extraAddresses;
+
+    /**
      * @var string
      */
     private $language;
@@ -202,6 +207,30 @@ class Contact
     public function getCountry()
     {
         return $this->country;
+    }
+
+    /**
+     * @param array $customFields
+     */
+    public function setExtraAddresses($extraAddresses)
+    {
+        $this->extraAddresses = $extraAddresses;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExtraAddresses()
+    {
+        return $this->extraAddresses;
+    }
+
+    /**
+     * @param string $languageCode
+     */
+    public function setLanguageCode($languageCode)
+    {
+        $this->language = $languageCode;
     }
 
     /**
@@ -594,11 +623,13 @@ class Contact
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
                             var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($item, $methodName), $value);
                     }
-                    call_user_func(array($item, $methodName), $value);
             }
+
         }
 
         return $item;
@@ -657,7 +688,7 @@ class Contact
             $return['add_tag_by_string'] = implode(',', $this->getTags());
         }
         if ($this->getCustomFields()) {
-            foreach($this->getCustomFields() as $fieldID => $fieldValue) {
+            foreach ($this->getCustomFields() as $fieldID => $fieldValue) {
                 $return['custom_field_' . $fieldID] = $fieldValue;
             }
         }

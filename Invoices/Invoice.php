@@ -30,6 +30,11 @@ class Invoice
     private $name;
 
     /**
+     * @var string
+     */
+    private $comments;
+
+    /**
      * @var Contact
      */
     private $contact;
@@ -47,7 +52,7 @@ class Invoice
     /**
      * @var bool
      */
-    private $paid = false;
+    private $paid = FALSE;
 
     /**
      * @var array
@@ -120,6 +125,81 @@ class Invoice
     private $structuredCommunication;
 
     /**
+     * @var string
+     */
+    private $forAttentionOf;
+
+    /**
+     * @var string
+     */
+    private $paymentTerm;
+
+    /**
+     * @var array
+     */
+    private $customFields;
+
+    /**
+     * Set a single custom field
+     *
+     * @param string $id
+     * @param mixed  $value
+     */
+    public function setCustomField($id, $value)
+    {
+        $this->customFields[$id] = $value;
+    }
+
+    /**
+     * @param array $customFields
+     */
+    public function setCustomFields($customFields)
+    {
+        $this->customFields = $customFields;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustomFields()
+    {
+        return $this->customFields;
+    }
+
+    /**
+     * @return string
+     */
+    public function getForAttentionOf()
+    {
+        return $this->forAttentionOf;
+    }
+
+    /**
+     * @param string forAttentionOf
+     */
+    public function setForAttentionOf($value)
+    {
+        $this->forAttentionOf = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPaymentTerm()
+    {
+        return $this->paymentTerm;
+    }
+
+    /**
+     * @param string paymentTerm
+     */
+    public function setPaymentTerm($value)
+    {
+        $this->paymentTerm = $value;
+    }
+
+
+    /**
      * @return int
      */
     public function getId()
@@ -152,6 +232,21 @@ class Invoice
     }
 
     /**
+     * @return string
+     */
+    public function getComments()
+    {
+        return $this->comments;
+    }
+
+    /**
+     * @param string $comments
+     */
+    public function setComments($comments)
+    {
+        $this->comments = $comments;
+    }
+    /**
      * @param \SumoCoders\Teamleader\Crm\Company $company
      */
     public function setCompany(Company $company)
@@ -165,7 +260,7 @@ class Invoice
     public function getCompany()
     {
         return $this->company;
-    }    
+    }
 
     /**
      * @param \SumoCoders\Teamleader\Crm\Contact $contact
@@ -500,13 +595,13 @@ class Invoice
 
                 case 'for_id':
                 case 'contact_or_company_id':
-                    $contactOrCompany = null;
-                    $contactOrCompanyId = null;
+                    $contactOrCompany = NULL;
+                    $contactOrCompanyId = NULL;
 
                     // Check if contact or copany are given via a 'for' property or a 'contact_or_company' property
                     if (isset($data['for'])) {
                         $contactOrCompany = $data['for'];
-                    }else if (isset($data['contact_or_company'])) {
+                    } else if (isset($data['contact_or_company'])) {
                         $contactOrCompany = $data['contact_or_company'];
                     }
 
@@ -553,10 +648,11 @@ class Invoice
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
                             var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($invoice, $methodName), $value);
                     }
-                    call_user_func(array($invoice, $methodName), $value);
             }
         }
 
@@ -582,6 +678,22 @@ class Invoice
         $return['contact_or_company'] = $this->isContactOrCompany();
         if ($this->getSysDepartmentId()) {
             $return['sys_department_id'] = $this->getSysDepartmentId();
+        }
+        if($this->getForAttentionOf()) {
+            $return['for_attention_of'] = $this->getForAttentionOf();
+        }
+        if($this->getPaymentTerm()) {
+            $return['payment_term'] = $this->getPaymentTerm();
+        }
+
+        if ($this->getComments()) {
+            $return['comments'] = $this->getComments();
+        }
+
+        if ($this->getCustomFields()) {
+            foreach ($this->getCustomFields() as $fieldID => $fieldValue) {
+                $return['custom_field_' . $fieldID] = $fieldValue;
+            }
         }
 
         $lines = $this->getLines();

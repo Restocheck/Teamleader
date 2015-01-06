@@ -16,6 +16,10 @@ class InvoiceLine
      * @var float
      */
     private $amount;
+	/**
+     * @var float
+     */
+    private $pricePerUnit;
 
     /**
      * @var string
@@ -42,12 +46,123 @@ class InvoiceLine
      */
     private $lineTotalInclVat;
 
+     /**
+     * @var string
+     */
+    private $subtitle;
+
+    /**
+     * @var string
+     */
+    private $account;
+
+    /**
+     * @var string
+     */
+    private $productId;
+
+    /**
+     * @return string
+     */
+    public function getVatRate()
+    {
+        return $this->vat;
+    }
+
+    /**
+     * @param string vatRate
+     */
+    public function setVatRate($value)
+    {
+        $this->vat = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string text
+     */
+    public function setText($value)
+    {
+        $this->description = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubtitle()
+    {
+        return $this->subtitle;
+    }
+
+    /**
+     * @param string subtitle
+     */
+    public function setSubtitle($value)
+    {
+        $this->subtitle = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAccount()
+    {
+        return $this->account;
+    }
+
+    /**
+     * @param string account
+     */
+    public function setAccount($value)
+    {
+        $this->account = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProductId()
+    {
+        return $this->productId;
+    }
+
+    /**
+     * @param string productId
+     */
+    public function setProductId($value)
+    {
+        $this->productId = $value;
+    }
+
     /**
      * @param float $amount
      */
     public function setAmount($amount)
     {
         $this->amount = $amount;
+    }
+
+	/**
+     * @param float $price_per_unit
+     */
+    public function setPricePerUnit($price_per_unit)
+    {
+        $this->pricePerUnit = $price_per_unit;
+    }
+
+	/**
+     * @return float
+     */
+    public function getPricePerUnit()
+    {
+        return $this->pricePerUnit;
     }
 
     /**
@@ -156,13 +271,13 @@ class InvoiceLine
 
                 case 'vat_rate':
                     $invoiceLine->setVat($value);
+                    break;
 
-                case 'account': 
+                case 'account':
                     // Todo
                     break;
 
                 default:
-                    // ignore empty values
                     if ($value == '') {
                         continue;
                     }
@@ -171,10 +286,11 @@ class InvoiceLine
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
                             var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($invoiceLine, $methodName), $value);
                     }
-                    call_user_func(array($invoiceLine, $methodName), $value);
             }
         }
 
@@ -195,8 +311,8 @@ class InvoiceLine
         $return['price_' . $index] = $this->getPrice();
         $return['amount_' . $index] = $this->getAmount();
         $return['vat_' . $index] = $this->getVat();
-        // $return['product_id_' . $index] = $this->getProduct()->getId();
-        // $return['account_' . $index] = $this->getAccount()->getId();
+        $return['product_id_' . $index] = $this->getProductId();
+        $return['account_' . $index] = $this->getAccount();
 
         return $return;
     }

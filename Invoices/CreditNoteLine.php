@@ -16,6 +16,10 @@ class CreditnoteLine
      */
     private $description;
 
+	/**
+     * @var float
+     */
+    private $pricePerUnit;
     /**
      * @var int
      */
@@ -71,6 +75,22 @@ class CreditnoteLine
     public function setPrice($price)
     {
         $this->price = $price;
+    }
+	
+	/**
+     * @param int $price_per_unit
+     */
+    public function setPricePerUnit($price_per_unit)
+    {
+        $this->pricePerUnit = $price_per_unit;
+    }
+	
+	/**
+     * @return float
+     */
+    public function getPricePerUnit()
+    {
+        return $this->pricePerUnit;
     }
 
     /**
@@ -155,8 +175,9 @@ class CreditnoteLine
 
                 case 'vat_rate':
                     $creditnoteLine->setVat($value);
+                    break;
 
-                case 'account': 
+                case 'account':
                     // Todo
                     break;
 
@@ -170,10 +191,11 @@ class CreditnoteLine
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
                             var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($creditnoteLine, $methodName), $value);
                     }
-                    call_user_func(array($creditnoteLine, $methodName), $value);
             }
         }
 

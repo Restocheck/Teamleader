@@ -5,10 +5,14 @@ namespace SumoCoders\Teamleader;
 use SumoCoders\Teamleader\Exception;
 use SumoCoders\Teamleader\Crm\Contact;
 use SumoCoders\Teamleader\Crm\Company;
-use SumoCoders\Teamleader\Opportunities\Sale;
 use SumoCoders\Teamleader\Invoices\Invoice;
 use SumoCoders\Teamleader\Invoices\Creditnote;
 use SumoCoders\Teamleader\Subscriptions\Subscription;
+use SumoCoders\Teamleader\Deals\Deal;
+use SumoCoders\Teamleader\Departments\Department;
+use SumoCoders\Teamleader\Users\User;
+use SumoCoders\Teamleader\Notes\Note;
+use SumoCoders\Teamleader\Timetracking\Task;
 
 /**
  * Teamleader class
@@ -21,7 +25,7 @@ use SumoCoders\Teamleader\Subscriptions\Subscription;
 class Teamleader
 {
     // internal constant to enable/disable debugging
-    const DEBUG = true;
+    const DEBUG = false;
 
     // base endpoint
     const API_URL = 'https://www.teamleader.be/api';
@@ -58,7 +62,7 @@ class Teamleader
      *
      * @var int
      */
-    private $timeOut = 60;
+    private $timeOut = 30;
 
     /**
      * The user agent
@@ -67,14 +71,13 @@ class Teamleader
      */
     private $userAgent;
 
-    // class methods
     /**
      * Create an instance
      *
      * @param string $apiGroup  The apiGroup to use.
      * @param string $apiSecret The apiKey to use.
      */
-    public function __construct($apiGroup, $apiSecret, $sslEnabled = false)
+    public function __construct($apiGroup, $apiSecret, $sslEnabled = true)
     {
         $this->setApiGroup($apiGroup);
         $this->setApiSecret($apiSecret);
@@ -175,7 +178,8 @@ class Teamleader
      *
      * @param string $enabled
      */
-    public function setSslEnabled($enabled) {
+    public function setSslEnabled($enabled)
+    {
         $this->sslEnabled = (boolean) $enabled;
     }
 
@@ -192,6 +196,7 @@ class Teamleader
         $this->userAgent = (string) $userAgent;
     }
 
+	
     /**
      * Make the call
      *
@@ -217,7 +222,7 @@ class Teamleader
         $options[CURLOPT_PORT] = self::API_PORT;
         $options[CURLOPT_USERAGENT] = $this->getUserAgent();
         $options[CURLOPT_FOLLOWLOCATION] = true;
-        if(!$this->getSslEnabled()) {
+        if (!$this->getSslEnabled()) {
             $options[CURLOPT_SSL_VERIFYPEER] = false;
             $options[CURLOPT_SSL_VERIFYHOST] = false;
         }
@@ -241,6 +246,18 @@ class Teamleader
         // error?
         if ($errorNumber != '') {
             throw new Exception($errorMessage, $errorNumber);
+        }
+		
+		// in case we received an error 400 Bad Request an exception should be thrown
+        if ($headers['http_code'] != 200) {
+			// attempt to extract a reason to show in the exception
+			$json = @json_decode($response, true);
+            if ($json !== false && isset($json['reason'])) {
+				throw new Exception('Teamleader '.$endPoint.' API returned statuscode 400 Bad Request. Reason: '.$json['reason']);
+            } else {
+				// in case no JSON could be parsed, log the response in the exception
+				throw new Exception('Teamleader '.$endPoint.' API returned statuscode 400 Bad Request. Data returned: '.$response);
+            }
         }
 
         // we expect JSON so decode it
@@ -268,6 +285,48 @@ class Teamleader
     public function helloWorld()
     {
         return $this->doCall('helloWorld.php');
+    }
+
+    /**
+     * Fetch departments
+     *
+     * @return array An array of departments
+     */
+    public function getDepartments()
+    {
+        $fields = array();
+
+        $rawData = $this->doCall('getDepartments.php', $fields);
+
+        $departments = array_map(
+            function ($department) {
+                return Department::initializeWithRawData($department);
+            },
+            $rawData
+        );
+
+        return $departments;
+    }
+
+    /**
+     * Fetch users
+     *
+     * @return array An array of users
+     */
+    public function getUsers()
+    {
+        $fields = array();
+
+        $rawData = $this->doCall('getUsers.php', $fields);
+
+        $users = array_map(
+            function($user) {
+                return User::initializeWithRawData($user);
+            },
+            $rawData
+        );
+
+        return $users;
     }
 
     // CRM methods
@@ -393,6 +452,22 @@ class Teamleader
         }
 
         return $return;
+    }
+
+     /**
+     * Fetch contacts related to a company
+     *
+     * @param  int     $id The ID of the company
+     * @return array   An array of contacts related to the company
+     */
+    public function crmGetContactsByCompany($id)
+    {
+        $fields = array();
+        $fields['company_id'] = (int) $id;
+
+        $rawData = $this->doCall('getContactsByCompany.php', $fields);
+
+        return $rawData;
     }
 
     /**
@@ -582,11 +657,11 @@ class Teamleader
 
     /**
      * Get all existing customers
-     * 
+     *
      * @return array
      */
     public function crmGetAllCustomers()
-    {   
+    {
         $customers = array();
 
         $customers['contacts'] = array();
@@ -610,7 +685,7 @@ class Teamleader
         return $customers;
     }
 
-    public function dealsGetDeal($id) 
+    public function dealsGetDeal($id)
     {
         $fields = array();
         $fields['deal_id'] = (int) $id;
@@ -622,20 +697,94 @@ class Teamleader
             throw new Exception($rawData);
         }
 
-        return Sale::initializeWithRawData($rawData);
+        // This is a bugfix: The api doesn't return the deal's id when we ask for a specific deal using this endpoint.
+        // To be able to return a complete Deal Entity, it needs to have its id set.
+        // We will just fake the id by inserting it ourselves. This if block may be removed when the api returns an id,
+        // and everything should keep working.
+        if (!isset($rawData['id'])) {
+            $rawData['id'] = (int) $id;
+        }
+
+        return Deal::initializeWithRawData($rawData);
+    }
+
+    /**
+     * Search for deals
+     *
+     * @param int    $amount    The amount of deals returned per request (1-100)
+     * @param int    $page      The current page (first page is 0)
+     * @param string $searchBy  A search string. Teamleader will try to search deals matching this string.
+     * @param int    $segmentId Teamleader will only return deals in this segment.
+     * @param int    $phaseId   Teamleader will return only deals that are in this phase right now.
+     *
+     * @return Deal
+     */
+    public function dealsGetDeals($amount = 100, $page = 0, $searchBy = null, $segmentId = null, $phaseId = null)
+    {
+        $fields = array();
+        $fields['amount'] = (int) $amount;
+        $fields['pageno'] = (int) $page;
+
+        if ($searchBy !== null) {
+            $fields['searchby'] = (string) $searchBy;
+        }
+        if ($segmentId !== null) {
+            $fields['segment_id'] = (int) $segmentId;
+        }
+        if ($phaseId !== null) {
+            $fields['filter_by_phase_id'] = (int) $phaseId;
+        }
+
+        $rawData = $this->doCall('getDeals.php', $fields);
+        $return = array();
+
+        if (!empty($rawData)) {
+            foreach ($rawData as $row) {
+                $return[] = Deal::initializeWithRawData($row);
+            }
+        }
+
+        return $return;
     }
 
     /**
      * Adds an opportunity
      *
-     * @param  Sale $sale
+     * @param  Deal $deal
      * @return int
      */
-    public function opportunitiesAddSale(Sale $sale)
+    public function opportunitiesAddSale(Deal $deal)
     {
-        $fields = $sale->toArrayForApi();
+        $this->dealsAddDeal($deal);
+    }
+
+    /**
+     * Adds an opportunity
+     *
+     * @param  Deal $deal
+     * @return int
+     */
+    public function dealsAddDeal(Deal $deal)
+    {
+        $fields = $deal->toArrayForApi();
 
         return $this->doCall('addSale.php', $fields);
+    }
+
+    /**
+     * Updates a deal
+     *
+     * @param Deal $deal
+     * @return void
+     */
+    public function dealsUpdateDeal(Deal $deal)
+    {
+        $fields = $deal->toArrayForApi(false);
+        $fields['deal_id'] = (int) $deal->getId();
+
+        $this->doCall('updateDeal.php', $fields);
+
+        return;
     }
 
     /**
@@ -655,8 +804,23 @@ class Teamleader
     }
 
     /**
+     * Updates an invoice
+     *
+     * @param  Invoice $invoice
+     * @return int
+     */
+    public function invoicesUpdateInvoice(Invoice $invoice)
+    {
+        $fields = $invoice->toArrayForApi();
+        $fields['invoice_id'] = (int) $invoice->getId();
+
+        $this->doCall('updateInvoice.php', $fields);
+
+        return $invoice->getId();
+    }
+    /**
      * Search for invoices
-     * 
+     *
      * @param int $dateFrom
      * @param int $dateTo
      * @param Contact|Company|null $contactOrCompany
@@ -704,7 +868,7 @@ class Teamleader
 
     /**
      * Get a specific invoice by id
-     * 
+     *
      * @param int $id
      * @return Invoice
      */
@@ -724,24 +888,8 @@ class Teamleader
     }
 
     /**
-     * Get update an invoice
-     * 
-     * @param Invoice $invoice
-     * @return bool
-     */
-    public function invoicesUpdateInvoice(Invoice $invoice)
-    {
-        $fields = $invoice->toArrayForApi();
-        $fields['invoice_id'] = $invoice->getId();
-
-        $rawData = $this->doCall('updateInvoice.php', $fields);
-
-        return ($rawData == 'OK');
-    }
-
-    /**
      * Sets the invoice's payment status to paid
-     * 
+     *
      * @param  Invoice $invoice
      * @return bool
      */
@@ -759,9 +907,9 @@ class Teamleader
 
     /**
      * Download a pdf of the invoice
-     * 
+     *
      * @param Invoice $invoice
-     * @return 
+     * @return
      */
     public function invoicesDownloadInvoicePDF(Invoice $invoice, $headers = false)
     {
@@ -789,7 +937,7 @@ class Teamleader
 
     /**
      * Search for creditnotes
-     * 
+     *
      * @param int $dateFrom
      * @param int $dateTo
      * @param Contact|Company|null $contactOrCompany
@@ -841,7 +989,7 @@ class Teamleader
 
     /**
      * Get a specific creditnote by id
-     * 
+     *
      * @param int $id
      * @return Creditnote
      */
@@ -862,9 +1010,9 @@ class Teamleader
 
     /**
      * Download a pdf of the creditnote
-     * 
+     *
      * @param Creditnote $creditnote
-     * @return 
+     * @return
      */
     public function invoicesDownloadCreditnotePDF(Creditnote $creditnote, $headers = false)
     {
@@ -886,6 +1034,36 @@ class Teamleader
 
         $id = $this->doCall('addSubscription.php', $fields);
         $subscription->setId($id);
+
+        return $id;
+    }
+
+    /**
+     * Add a note
+     *
+     * @param Note $note
+     * @return bool
+     */
+    public function notesAddNote(Note $note)
+    {
+        $fields = $note->toArrayForApi();
+        $rawData = $this->doCall('addNote.php', $fields);
+
+        return ($rawData == 'OK');
+    }
+
+    /**
+     * Adds a task
+     *
+     * @param  Task $task
+     * @return int
+     */
+    public function timetrackingAddTask(Task $task)
+    {
+        $fields = $task->toArrayForApi();
+
+        $id = $this->doCall('addTask.php', $fields);
+        $task->setId($id);
 
         return $id;
     }

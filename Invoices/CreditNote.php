@@ -1,7 +1,7 @@
 <?php
 
 /**
- * 
+ *
  * @todo Discount info
  */
 
@@ -17,7 +17,7 @@ class Creditnote
 {
     const CONTACT = 'contact';
     const COMPANY = 'company';
-    
+
     /**
      * @var int
      */
@@ -37,6 +37,11 @@ class Creditnote
      * @var int
      */
     private $creditnoteNr;
+
+	 /**
+     * @var int
+     */
+    private $relatedInvoiceId;
 
     /**
      * @var string
@@ -116,7 +121,7 @@ class Creditnote
     {
         return $this->invoice;
     }
-    
+
     /**
      * @param Invoice $invoice the invoice
      */
@@ -132,7 +137,7 @@ class Creditnote
     {
         return $this->lines;
     }
-    
+
     /**
      * @param array $lines the lines
      */
@@ -157,13 +162,31 @@ class Creditnote
         $this->creditnoteNrNr = $creditnoteNrNr;
     }
 
-    /**
+	/**
+     * @param int $invoice_id
+     */
+    public function setRelatedInvoiceId($invoice_id)
+    {
+        $this->relatedInvoiceId = $invoice_id;
+    }
+
+
+	 /**
      * @return int
      */
     public function getCreditnoteNr()
     {
         return $this->creditnoteNrNr;
     }
+
+	 /**
+     * @return int
+     */
+    public function getRelatedInvoiceId()
+    {
+        return $this->relatedInvoiceId;
+    }
+
 
     /**
      * @param string $creditnoteNrDetailed
@@ -393,13 +416,13 @@ class Creditnote
 
                 case 'for_id':
                 case 'contact_or_company_id':
-                    $contactOrCompany = null;
-                    $contactOrCompanyId = null;
+                    $contactOrCompany = NULL;
+                    $contactOrCompanyId = NULL;
 
                     // Check if contact or copany are given via a 'for' property or a 'contact_or_company' property
                     if (isset($data['for'])) {
                         $contactOrCompany = $data['for'];
-                    }else if (isset($data['contact_or_company'])) {
+                    } else if (isset($data['contact_or_company'])) {
                         $contactOrCompany = $data['contact_or_company'];
                     }
 
@@ -445,12 +468,12 @@ class Creditnote
                     $methodName = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $key)));
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
-                            // var_dump($key, $value);
-                            echo $methodName;
+                            var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($creditnote, $methodName), $value);
                     }
-                    call_user_func(array($creditnote, $methodName), $value);
             }
         }
 

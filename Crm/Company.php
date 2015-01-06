@@ -61,6 +61,11 @@ class Company
     private $country;
 
     /**
+     * @var array
+     */
+    private $extraAddresses;
+
+    /**
      * @var string
      */
     private $website;
@@ -210,6 +215,22 @@ class Company
     }
 
     /**
+     * @param array $customFields
+     */
+    public function setExtraAddresses($extraAddresses)
+    {
+        $this->extraAddresses = $extraAddresses;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExtraAddresses()
+    {
+        return $this->extraAddresses;
+    }
+
+    /**
      * @param int $dateAdded
      */
     public function setDateAdded($dateAdded)
@@ -292,7 +313,7 @@ class Company
     /**
      * @param string $language
      */
-    public function setLanguage($language)
+    public function setLanguageCode($language)
     {
         $this->language = $language;
     }
@@ -615,10 +636,11 @@ class Company
                     if (!method_exists(__CLASS__, $methodName)) {
                         if (Teamleader::DEBUG) {
                             var_dump($key, $value);
+                            throw new Exception('Unknown method (' . $methodName . ')');
                         }
-                        throw new Exception('Unknown method (' . $methodName . ')');
+                    } else {
+                        call_user_func(array($item, $methodName), $value);
                     }
-                    call_user_func(array($item, $methodName), $value);
             }
         }
 
@@ -642,6 +664,9 @@ class Company
         }
         if ($this->getTaxCode()) {
             $return['vat_code'] = $this->getTaxCode();
+        }
+        if ($this->getBusinessType()) {
+            $return['business_type'] = $this->getBusinessType();
         }
         if ($this->getTelephone()) {
             $return['telephone'] = $this->getTelephone();
@@ -671,7 +696,7 @@ class Company
             $return['add_tag_by_string'] = implode(',', $this->getTags());
         }
         if ($this->getCustomFields()) {
-            foreach($this->getCustomFields() as $fieldID => $fieldValue) {
+            foreach ($this->getCustomFields() as $fieldID => $fieldValue) {
                 $return['custom_field_' . $fieldID] = $fieldValue;
             }
         }
