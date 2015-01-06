@@ -10,6 +10,7 @@ use SumoCoders\Teamleader\Invoices\Creditnote;
 use SumoCoders\Teamleader\Subscriptions\Subscription;
 use SumoCoders\Teamleader\Deals\Deal;
 use SumoCoders\Teamleader\Departments\Department;
+use SumoCoders\Teamleader\Users\User;
 use SumoCoders\Teamleader\Notes\Note;
 use SumoCoders\Teamleader\Timetracking\Task;
 
@@ -289,7 +290,7 @@ class Teamleader
     /**
      * Fetch departments
      *
-     * @return array   An array of contacts related to the company
+     * @return array An array of departments
      */
     public function getDepartments()
     {
@@ -305,6 +306,27 @@ class Teamleader
         );
 
         return $departments;
+    }
+
+    /**
+     * Fetch users
+     *
+     * @return array An array of users
+     */
+    public function getUsers()
+    {
+        $fields = array();
+
+        $rawData = $this->doCall('getUsers.php', $fields);
+
+        $users = array_map(
+            function($user) {
+                return User::initializeWithRawData($user);
+            },
+            $rawData
+        );
+
+        return $users;
     }
 
     // CRM methods
@@ -673,6 +695,14 @@ class Teamleader
         // validate response
         if (!is_array($rawData)) {
             throw new Exception($rawData);
+        }
+
+        // This is a bugfix: The api doesn't return the deal's id when we ask for a specific deal using this endpoint.
+        // To be able to return a complete Deal Entity, it needs to have its id set.
+        // We will just fake the id by inserting it ourselves. This if block may be removed when the api returns an id,
+        // and everything should keep working.
+        if (!isset($rawData['id'])) {
+            $rawData['id'] = (int) $id;
         }
 
         return Deal::initializeWithRawData($rawData);
