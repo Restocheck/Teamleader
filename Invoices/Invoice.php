@@ -676,12 +676,15 @@ class Invoice
             $return['contact_or_company_id'] = $this->getCompany()->getId();
         }
         $return['contact_or_company'] = $this->isContactOrCompany();
+
         if ($this->getSysDepartmentId()) {
             $return['sys_department_id'] = $this->getSysDepartmentId();
         }
+
         if($this->getForAttentionOf()) {
             $return['for_attention_of'] = $this->getForAttentionOf();
         }
+
         if($this->getPaymentTerm()) {
             $return['payment_term'] = $this->getPaymentTerm();
         }
@@ -694,6 +697,10 @@ class Invoice
             foreach ($this->getCustomFields() as $fieldID => $fieldValue) {
                 $return['custom_field_' . $fieldID] = $fieldValue;
             }
+        }
+
+        if ($this->getDate()) {
+            $return['date'] = date('d/m/Y', $this->getDate());
         }
 
         $lines = $this->getLines();
